@@ -1,0 +1,159 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+}
+
+body {
+  background: radial-gradient(ellipse at center, #3a2a1c 0%, #1c130c 100%);
+  color: #2b1d14;
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+.scene {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  padding: 2rem 1rem;
+}
+
+.book {
+  position: relative;
+  width: min(760px, 100%);
+  min-height: 420px;
+  background: #f2e6cc;
+  background-image: linear-gradient(90deg, rgba(0, 0, 0, 0.04) 0%, transparent 4%, transparent 96%, rgba(0, 0, 0, 0.04) 100%);
+  border-radius: 4px;
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.6),
+    0 0 0 1px #c9b896;
+  padding: 2.5rem 3rem;
+}
+
+.page {
+  animation: page-appear 400ms ease-out;
+}
+
+@keyframes page-appear {
+  from {
+    opacity: 0;
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+.folio {
+  text-align: center;
+  font-variant-numeric: oldstyle-nums;
+  font-size: 0.9rem;
+  color: #8a6d3b;
+  letter-spacing: 0.1em;
+  margin-bottom: 1rem;
+}
+
+.columns {
+  column-count: 2;
+  column-gap: 2rem;
+  column-rule: 1px solid #c9b896;
+  line-height: 1.6;
+  font-size: 1.02rem;
+  text-align: justify;
+}
+
+.columns p {
+  margin: 0 0 1em;
+}
+
+.illustration {
+  column-span: all;
+  margin: 0 0 1.5rem;
+  text-align: center;
+}
+
+.illustration img {
+  max-width: 60%;
+  height: auto;
+  filter: sepia(1) contrast(1.1);
+  border: 1px solid #8a6d3b;
+  padding: 4px;
+  background: #fff;
+}
+
+.loading {
+  text-align: center;
+  margin-top: 1rem;
+  color: #8a6d3b;
+  font-style: italic;
+}
+
+.error {
+  text-align: center;
+  margin-top: 1rem;
+  color: #7a2e2e;
+  font-style: italic;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem 2rem;
+  color: #e6d8bd;
+}
+
+.controls-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.controls-label {
+  font-size: 0.85rem;
+  opacity: 0.8;
+  margin-right: 0.25rem;
+}
+
+.controls button {
+  font-family: inherit;
+  background: #f2e6cc;
+  color: #2b1d14;
+  border: 1px solid #8a6d3b;
+  border-radius: 3px;
+  padding: 0.4rem 0.8rem;
+  cursor: pointer;
+}
+
+.controls button:hover:not(:disabled) {
+  background: #e6d8bd;
+}
+
+.controls button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.start-over {
+  font-weight: bold;
+}
+
+@media (max-width: 600px) {
+  .columns {
+    column-count: 1;
+  }
+
+  .illustration img {
+    max-width: 100%;
+  }
+}
