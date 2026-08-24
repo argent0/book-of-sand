@@ -20,7 +20,13 @@ export function getTextProvider(): TextGenProvider {
 
 export function getImageProvider(): ImageGenProvider {
   if (!imageProvider) {
-    imageProvider = new LocalSDImageProvider(config.imageGen.host, config.imageGen.requestTimeoutMs);
+    imageProvider = new LocalSDImageProvider(
+      config.imageGen.host,
+      config.imageGen.requestTimeoutMs,
+      config.imageGen.width,
+      config.imageGen.height,
+      config.imageGen.steps
+    );
   }
   return imageProvider;
 }

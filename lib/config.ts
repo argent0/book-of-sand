@@ -27,6 +27,9 @@ export const config = {
     enabled: bool("IMAGE_GEN_ENABLED", true),
     host: str("IMAGE_GEN_HOST", "http://127.0.0.1:7860"),
     requestTimeoutMs: num("IMAGE_GEN_REQUEST_TIMEOUT_MS", 20000),
+    width: num("IMAGE_GEN_WIDTH", 768),
+    height: num("IMAGE_GEN_HEIGHT", 768),
+    steps: num("IMAGE_GEN_STEPS", 30),
   },
   illustrationProbability: num("ILLUSTRATION_PROBABILITY", 0.18),
 };

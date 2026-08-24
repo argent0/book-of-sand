@@ -4,7 +4,10 @@ import type { GenerateImageParams, GeneratedImage, ImageGenProvider } from "../t
 export class LocalSDImageProvider implements ImageGenProvider {
   constructor(
     private readonly host: string,
-    private readonly timeoutMs: number
+    private readonly timeoutMs: number,
+    private readonly width: number,
+    private readonly height: number,
+    private readonly steps: number
   ) {}
 
   async generateImage({ prompt }: GenerateImageParams): Promise<GeneratedImage> {
@@ -17,9 +20,9 @@ export class LocalSDImageProvider implements ImageGenProvider {
         body: JSON.stringify({
           prompt: `antique engraving illustration, black and white, woodcut style, ${prompt}`,
           negative_prompt: "color, modern, photo, watermark, text, signature",
-          steps: 20,
-          width: 512,
-          height: 512,
+          steps: this.steps,
+          width: this.width,
+          height: this.height,
           sampler_name: "Euler a",
         }),
       });
