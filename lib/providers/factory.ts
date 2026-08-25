@@ -27,7 +27,8 @@ export function getImageProvider(): ImageGenProvider {
       config.imageGen.requestTimeoutMs,
       config.imageGen.width,
       config.imageGen.height,
-      config.imageGen.steps
+      config.imageGen.steps,
+      config.imageGen.sampler
     );
   }
   return imageProvider;

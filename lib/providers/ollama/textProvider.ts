@@ -1,11 +1,6 @@
-import { SYSTEM_PROMPT } from "../../prompt/systemPrompt";
 import { buildUserPrompt } from "../../prompt/buildUserPrompt";
-import {
-  TOPIC_SYSTEM_PROMPT,
-  buildInventStartTopicPrompt,
-  buildSeedFromPagePrompt,
-  buildTopicChainPrompt,
-} from "../../prompt/topicPrompts";
+import { buildInventStartTopicPrompt, buildSeedFromPagePrompt, buildTopicChainPrompt } from "../../prompt/topicPrompts";
+import { PROSE_SYSTEM_PROMPT, TOPIC_SYSTEM_PROMPT } from "../../prompt/text";
 import { isValidPageNumber, randomPageNumber } from "../../prompt/pageNumber";
 import { hopsForJumpSize, normalizeChainLength, resetSkeleton, walkSkeleton } from "../../skeleton";
 import { TextGenUnavailableError } from "../errors";
@@ -81,7 +76,7 @@ export class OllamaTextProvider implements TextGenProvider {
   }
 
   private async callProseModel(userPrompt: string, wantIllustration: boolean): Promise<GeneratedPage> {
-    const json = await this.chat(SYSTEM_PROMPT, userPrompt, PAGE_RESPONSE_SCHEMA);
+    const json = await this.chat(PROSE_SYSTEM_PROMPT, userPrompt, PAGE_RESPONSE_SCHEMA);
 
     let parsed: { pageText?: unknown; pageNumber?: unknown; illustrationPrompt?: unknown };
     try {

@@ -1,3 +1,4 @@
+import { ILLUSTRATION_NEGATIVE_PROMPT, ILLUSTRATION_STYLE_PREFIX } from "../../prompt/text";
 import { ImageGenUnavailableError } from "../errors";
 import type { GenerateImageParams, GeneratedImage, ImageGenProvider } from "../types";
 
@@ -7,7 +8,8 @@ export class LocalSDImageProvider implements ImageGenProvider {
     private readonly timeoutMs: number,
     private readonly width: number,
     private readonly height: number,
-    private readonly steps: number
+    private readonly steps: number,
+    private readonly sampler: string
   ) {}
 
   async generateImage({ prompt }: GenerateImageParams): Promise<GeneratedImage> {
@@ -18,12 +20,12 @@ export class LocalSDImageProvider implements ImageGenProvider {
         headers: { "Content-Type": "application/json" },
         signal: AbortSignal.timeout(this.timeoutMs),
         body: JSON.stringify({
-          prompt: `antique engraving illustration, black and white, woodcut style, ${prompt}`,
-          negative_prompt: "color, modern, photo, watermark, text, signature",
+          prompt: `${ILLUSTRATION_STYLE_PREFIX} ${prompt}`,
+          negative_prompt: ILLUSTRATION_NEGATIVE_PROMPT,
           steps: this.steps,
           width: this.width,
           height: this.height,
-          sampler_name: "Euler a",
+          sampler_name: this.sampler,
         }),
       });
     } catch {

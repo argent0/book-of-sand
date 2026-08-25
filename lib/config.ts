@@ -30,6 +30,7 @@ export const config = {
     width: num("IMAGE_GEN_WIDTH", 768),
     height: num("IMAGE_GEN_HEIGHT", 768),
     steps: num("IMAGE_GEN_STEPS", 30),
+    sampler: str("IMAGE_GEN_SAMPLER", "Euler a"),
   },
   illustrationProbability: num("ILLUSTRATION_PROBABILITY", 0.18),
   structured: {

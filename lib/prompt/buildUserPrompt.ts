@@ -1,13 +1,5 @@
 import type { Direction, JumpSize } from "../providers/types";
-
-const DRIFT_INSTRUCTION: Record<JumpSize, string> = {
-  small:
-    "The reader has turned only a leaf or two. Stay close: the same or a closely related topic, imagery, and tone, as if the text simply kept going, only shifting a little.",
-  medium:
-    "The reader has skipped a modest handful of leaves. Drift noticeably: a related but distinct topic, a partial shift in tone or subject.",
-  large:
-    "The reader has skipped many leaves at once. Drift substantially: a related but clearly different topic, as if a large, unseen stretch of the book lies between the two pages.",
-};
+import { NUMBERING_INDEPENDENCE_INSTRUCTION, OPENING_PAGE_INSTRUCTION, PROSE_DRIFT_INSTRUCTION, TOPIC_VOICE_REFERENCE_PREFIX } from "./text";
 
 export function buildUserPrompt(params: {
   currentPageText: string | null;
@@ -23,25 +15,19 @@ export function buildUserPrompt(params: {
   if (topic) {
     parts.push(`The topic for this page is: "${topic}"`);
     if (currentPageText !== null) {
-      parts.push(
-        `For reference, here is the page the reader is turning away from — match its voice, register, and style, but write about the topic above rather than this page's specific content:\n\n"""\n${currentPageText}\n"""`
-      );
+      parts.push(`${TOPIC_VOICE_REFERENCE_PREFIX}\n\n"""\n${currentPageText}\n"""`);
     }
   } else if (currentPageText === null) {
-    parts.push(
-      "The book falls open at an arbitrary point. Generate a page as if opened at random, with no prior page to relate to."
-    );
+    parts.push(OPENING_PAGE_INSTRUCTION);
   } else {
     parts.push(`The current page reads:\n\n"""\n${currentPageText}\n"""\n`);
     parts.push(
-      `The reader is turning the book ${direction === "forward" ? "forward" : "backward"}. ${DRIFT_INSTRUCTION[jumpSize]}`
+      `The reader is turning the book ${direction === "forward" ? "forward" : "backward"}. ${PROSE_DRIFT_INSTRUCTION[jumpSize]}`
     );
   }
 
   if (currentPageText !== null) {
-    parts.push(
-      "The new page's number bears no logical or sequential relation to the current page's number — only the content's topical distance should scale with how far the reader jumped, not the numbering."
-    );
+    parts.push(NUMBERING_INDEPENDENCE_INSTRUCTION);
   }
 
   parts.push(
