@@ -1,16 +1,18 @@
 import type { Direction, JumpSize } from "../providers/types";
-import { INVENT_START_TOPIC_INSTRUCTION, PAGE_QUOTE_INTRO, TOPIC_DRIFT_INSTRUCTION } from "./text";
+import { loadPrompts } from "./loadPrompts";
 
 export function buildInventStartTopicPrompt(): string {
+  const prompts = loadPrompts();
   return [
-    INVENT_START_TOPIC_INSTRUCTION,
+    prompts.inventStartTopicInstruction,
     'Respond with JSON only: { "topics": string[] } — an array containing exactly 1 short topic phrase (a few words).',
   ].join("\n\n");
 }
 
 export function buildSeedFromPagePrompt(pageText: string): string {
+  const prompts = loadPrompts();
   return [
-    `${PAGE_QUOTE_INTRO}\n\n"""\n${pageText}\n"""`,
+    `${prompts.pageQuoteIntro}\n\n"""\n${pageText}\n"""`,
     'Respond with JSON only: { "topics": string[] } — an array containing exactly 1 short topic phrase (a few words) summarizing this page\'s subject.',
   ].join("\n\n");
 }
@@ -22,7 +24,8 @@ export function buildTopicChainPrompt(params: {
   hops: number;
 }): string {
   const { seedTopic, direction, jumpSize, hops } = params;
-  const instruction = TOPIC_DRIFT_INSTRUCTION[jumpSize].replace("{hops}", String(hops));
+  const prompts = loadPrompts();
+  const instruction = prompts.topicDriftInstruction[jumpSize].replace("{hops}", String(hops));
   const expectedCount = jumpSize === "medium" ? hops : 1;
 
   return [

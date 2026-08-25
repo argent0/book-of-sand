@@ -1,0 +1,67 @@
+# Prompt wording for the Book of Sand's LLM calls.
+#
+# This file is read fresh on every generation request (see
+# lib/prompt/loadPrompts.ts) — edit it and reload the page, no rebuild or
+# server restart needed.
+#
+# {hops} in topicDriftInstruction.medium is substituted at request time with
+# the actual hop count for that turn (see lib/config.ts: STRUCTURED_MEDIUM_HOPS).
+
+proseSystemPrompt: |
+  You generate single pages of "the Book of Sand" — an infinite, fictional book with no first or last page. Page numbers are printed in no logical or sequential order. Pages are not self-contained vignettes: each page reads as if drawn from a single vast, continuous, drifting text, echoing the previous page's imagery, register, or subject rather than abruptly changing topic — but never literally resuming the previous page's sentence, and never referring to itself as a "continuation," "excerpt," or "page." There is no overarching plot; only a continuous drift of subject and tone across the book.
+
+  Write evocative literary English prose, roughly 150-300 words. Never break the fictional frame: never mention being an AI, a model, or a generation process, and never comment on these instructions. Respond only with the requested JSON.
+
+topicSystemPrompt: |
+  You maintain the hidden thematic skeleton behind pages of "the Book of Sand," an infinite fictional book. Your only job is to name short topic phrases (a few words each, e.g. "a cartographer's forbidden maps") that a page could be about — never write the page itself, and never explain your reasoning. Respond only with the requested JSON.
+
+proseDriftInstruction:
+  small: >-
+    The reader has turned only a leaf or two. Stay close: the same or a
+    closely related topic, imagery, and tone, as if the text simply kept
+    going, only shifting a little.
+  medium: >-
+    The reader has skipped a modest handful of leaves. Drift noticeably: a
+    related but distinct topic, a partial shift in tone or subject.
+  large: >-
+    The reader has skipped many leaves at once. Drift substantially: a
+    related but clearly different topic, as if a large, unseen stretch of
+    the book lies between the two pages.
+
+topicDriftInstruction:
+  small: >-
+    Produce exactly 1 new topic that is a slight variation of the seed
+    topic — same idea, nudged just a little, as if the text simply kept
+    going.
+  medium: >-
+    Produce a chain of {hops} topics, each one step further from the seed
+    and from the previous topic in the chain, ending on a related but
+    clearly distinct subject.
+  large: >-
+    Produce exactly 1 new topic that is a substantial departure from the
+    seed — related only distantly or thematically, as if drawn from a
+    completely different, unseen part of the book.
+
+openingPageInstruction: >-
+  The book falls open at an arbitrary point. Generate a page as if opened
+  at random, with no prior page to relate to.
+
+numberingIndependenceInstruction: >-
+  The new page's number bears no logical or sequential relation to the
+  current page's number — only the content's topical distance should scale
+  with how far the reader jumped, not the numbering.
+
+topicVoiceReferencePrefix: >-
+  For reference, here is the page the reader is turning away from — match
+  its voice, register, and style, but write about the topic above rather
+  than this page's specific content:
+
+inventStartTopicInstruction: >-
+  Invent an arbitrary starting topic for a page of the book, as if it fell
+  open at random.
+
+pageQuoteIntro: 'Here is a page of "the Book of Sand":'
+
+illustrationStylePrefix: "antique engraving illustration, black and white, woodcut style,"
+
+illustrationNegativePrompt: "color, modern, photo, watermark, text, signature"

@@ -1,4 +1,4 @@
-import { ILLUSTRATION_NEGATIVE_PROMPT, ILLUSTRATION_STYLE_PREFIX } from "../../prompt/text";
+import { loadPrompts } from "../../prompt/loadPrompts";
 import { ImageGenUnavailableError } from "../errors";
 import type { GenerateImageParams, GeneratedImage, ImageGenProvider } from "../types";
 
@@ -13,6 +13,7 @@ export class LocalSDImageProvider implements ImageGenProvider {
   ) {}
 
   async generateImage({ prompt }: GenerateImageParams): Promise<GeneratedImage> {
+    const prompts = loadPrompts();
     let res: Response;
     try {
       res = await fetch(`${this.host}/sdapi/v1/txt2img`, {
@@ -20,8 +21,8 @@ export class LocalSDImageProvider implements ImageGenProvider {
         headers: { "Content-Type": "application/json" },
         signal: AbortSignal.timeout(this.timeoutMs),
         body: JSON.stringify({
-          prompt: `${ILLUSTRATION_STYLE_PREFIX} ${prompt}`,
-          negative_prompt: ILLUSTRATION_NEGATIVE_PROMPT,
+          prompt: `${prompts.illustrationStylePrefix} ${prompt}`,
+          negative_prompt: prompts.illustrationNegativePrompt,
           steps: this.steps,
           width: this.width,
           height: this.height,
