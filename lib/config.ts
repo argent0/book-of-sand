@@ -32,4 +32,8 @@ export const config = {
     steps: num("IMAGE_GEN_STEPS", 30),
   },
   illustrationProbability: num("ILLUSTRATION_PROBABILITY", 0.18),
+  structured: {
+    windowSize: num("STRUCTURED_WINDOW_SIZE", 5),
+    mediumHops: num("STRUCTURED_MEDIUM_HOPS", 3),
+  },
 };

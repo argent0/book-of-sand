@@ -1,17 +1,26 @@
 export type Direction = "forward" | "backward";
 export type JumpSize = "small" | "medium" | "large";
+export type Mode = "direct" | "structured";
+
+export interface SkeletonState {
+  topics: string[];
+  currentIndex: number;
+}
 
 export interface GeneratePageParams {
   currentPageText: string | null;
   direction: Direction;
   jumpSize: JumpSize;
   wantIllustration: boolean;
+  mode: Mode;
+  skeleton: SkeletonState | null;
 }
 
 export interface GeneratedPage {
   text: string;
   pageNumber: string;
   illustrationPrompt?: string;
+  skeleton?: SkeletonState;
 }
 
 export interface TextGenProvider {

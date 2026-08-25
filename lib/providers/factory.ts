@@ -12,7 +12,9 @@ export function getTextProvider(): TextGenProvider {
       config.ollama.host,
       config.ollama.model,
       config.ollama.temperature,
-      config.ollama.requestTimeoutMs
+      config.ollama.requestTimeoutMs,
+      config.structured.windowSize,
+      config.structured.mediumHops
     );
   }
   return textProvider;

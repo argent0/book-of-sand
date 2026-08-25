@@ -148,6 +148,38 @@ body {
   font-weight: bold;
 }
 
+.mode-toggle {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.mode-toggle button {
+  font-family: inherit;
+  background: transparent;
+  color: #e6d8bd;
+  border: 1px solid #8a6d3b;
+  border-radius: 3px;
+  padding: 0.3rem 0.9rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+}
+
+.mode-toggle button:hover:not(:disabled) {
+  background: rgba(230, 216, 189, 0.1);
+}
+
+.mode-toggle button.active {
+  background: #f2e6cc;
+  color: #2b1d14;
+  font-weight: bold;
+}
+
+.mode-toggle button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
 @media (max-width: 600px) {
   .columns {
     column-count: 1;

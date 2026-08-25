@@ -14,12 +14,20 @@ export function buildUserPrompt(params: {
   direction: Direction;
   jumpSize: JumpSize;
   wantIllustration: boolean;
+  topic?: string;
 }): string {
-  const { currentPageText, direction, jumpSize, wantIllustration } = params;
+  const { currentPageText, direction, jumpSize, wantIllustration, topic } = params;
 
   const parts: string[] = [];
 
-  if (currentPageText === null) {
+  if (topic) {
+    parts.push(`The topic for this page is: "${topic}"`);
+    if (currentPageText !== null) {
+      parts.push(
+        `For reference, here is the page the reader is turning away from — match its voice, register, and style, but write about the topic above rather than this page's specific content:\n\n"""\n${currentPageText}\n"""`
+      );
+    }
+  } else if (currentPageText === null) {
     parts.push(
       "The book falls open at an arbitrary point. Generate a page as if opened at random, with no prior page to relate to."
     );
@@ -28,6 +36,9 @@ export function buildUserPrompt(params: {
     parts.push(
       `The reader is turning the book ${direction === "forward" ? "forward" : "backward"}. ${DRIFT_INSTRUCTION[jumpSize]}`
     );
+  }
+
+  if (currentPageText !== null) {
     parts.push(
       "The new page's number bears no logical or sequential relation to the current page's number — only the content's topical distance should scale with how far the reader jumped, not the numbering."
     );

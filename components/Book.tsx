@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { Page } from "./Page";
 import { PageControls } from "./PageControls";
-import type { Direction, JumpSize } from "../lib/providers/types";
+import { ModeToggle } from "./ModeToggle";
+import type { Direction, JumpSize, Mode, SkeletonState } from "../lib/providers/types";
 
 export interface PageState {
   text: string;
@@ -15,7 +16,9 @@ async function fetchPage(body: {
   currentPageText: string | null;
   direction?: Direction;
   jumpSize?: JumpSize;
-}): Promise<PageState> {
+  mode: Mode;
+  skeleton: SkeletonState | null;
+}): Promise<{ page: PageState; skeleton: SkeletonState | null }> {
   const res = await fetch("/api/page", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -24,11 +27,17 @@ async function fetchPage(body: {
   if (!res.ok) {
     throw new Error("text-generation-unavailable");
   }
-  return res.json();
+  const json = await res.json();
+  return {
+    page: { text: json.text, pageNumber: json.pageNumber, illustration: json.illustration },
+    skeleton: json.skeleton ?? null,
+  };
 }
 
 export function Book() {
   const [page, setPage] = useState<PageState | null>(null);
+  const [mode, setMode] = useState<Mode>("direct");
+  const [skeleton, setSkeleton] = useState<SkeletonState | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -40,9 +49,15 @@ export function Book() {
   async function startOver() {
     setLoading(true);
     setError(null);
+    setSkeleton(null);
     try {
-      const next = await fetchPage({ currentPageText: null });
+      const { page: next, skeleton: nextSkeleton } = await fetchPage({
+        currentPageText: null,
+        mode,
+        skeleton: null,
+      });
       setPage(next);
+      setSkeleton(nextSkeleton);
     } catch {
       setError("The book resists opening — the model isn't reachable.");
     } finally {
@@ -50,13 +65,25 @@ export function Book() {
     }
   }
 
+  function changeMode(newMode: Mode) {
+    setMode(newMode);
+    setSkeleton(null);
+  }
+
   async function turnPage(direction: Direction, jumpSize: JumpSize) {
     if (!page || loading) return;
     setLoading(true);
     setError(null);
     try {
-      const next = await fetchPage({ currentPageText: page.text, direction, jumpSize });
+      const { page: next, skeleton: nextSkeleton } = await fetchPage({
+        currentPageText: page.text,
+        direction,
+        jumpSize,
+        mode,
+        skeleton,
+      });
       setPage(next);
+      setSkeleton(nextSkeleton);
     } catch {
       setError("The book resists turning — the model isn't reachable.");
     } finally {
@@ -66,6 +93,7 @@ export function Book() {
 
   return (
     <main className="scene">
+      <ModeToggle mode={mode} disabled={loading} onChange={changeMode} />
       <div className="book">
         {page && <Page key={page.text} pageNumber={page.pageNumber} text={page.text} illustration={page.illustration} />}
         {loading && <div className="loading">turning the page…</div>}
