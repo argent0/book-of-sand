@@ -48,4 +48,10 @@ export const config = {
     windowSize: num("STRUCTURED_WINDOW_SIZE", 5),
     mediumHops: num("STRUCTURED_MEDIUM_HOPS", 3),
   },
+  tts: {
+    // English only — the ai-piper voice model is en_US-lessac-high.
+    enabled: bool("TTS_ENABLED", true),
+    host: str("TTS_HOST", "http://constantinople:5002"),
+    requestTimeoutMs: num("TTS_REQUEST_TIMEOUT_MS", 60000),
+  },
 };

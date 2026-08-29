@@ -156,13 +156,16 @@ body {
 }
 
 .mode-toggle,
-.language-toggle {
+.language-toggle,
+.speech-controls {
   display: flex;
+  align-items: center;
   gap: 0.5rem;
 }
 
 .mode-toggle button,
-.language-toggle button {
+.language-toggle button,
+.speech-controls button {
   font-family: inherit;
   background: transparent;
   color: #e6d8bd;
@@ -175,7 +178,8 @@ body {
 }
 
 .mode-toggle button:hover:not(:disabled),
-.language-toggle button:hover:not(:disabled) {
+.language-toggle button:hover:not(:disabled),
+.speech-controls button:hover:not(:disabled) {
   background: rgba(230, 216, 189, 0.1);
 }
 
@@ -187,9 +191,20 @@ body {
 }
 
 .mode-toggle button:disabled,
-.language-toggle button:disabled {
+.language-toggle button:disabled,
+.speech-controls button:disabled {
   opacity: 0.6;
   cursor: default;
+}
+
+.auto-advance {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #e6d8bd;
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+  cursor: pointer;
 }
 
 @media (max-width: 600px) {

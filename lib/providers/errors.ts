@@ -18,3 +18,10 @@ export class ImageGenTimeoutError extends ImageGenUnavailableError {
     this.name = "ImageGenTimeoutError";
   }
 }
+
+export class SpeechGenUnavailableError extends Error {
+  constructor(message = "Speech generation backend is unavailable") {
+    super(message);
+    this.name = "SpeechGenUnavailableError";
+  }
+}

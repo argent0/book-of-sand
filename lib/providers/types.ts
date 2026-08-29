@@ -47,3 +47,16 @@ export interface GeneratedImage {
 export interface ImageGenProvider {
   generateImage(params: GenerateImageParams): Promise<GeneratedImage>;
 }
+
+export interface SynthesizeSpeechParams {
+  text: string;
+}
+
+export interface SynthesizedSpeech {
+  audio: ArrayBuffer;
+  contentType: string;
+}
+
+export interface SpeechProvider {
+  synthesizeSpeech(params: SynthesizeSpeechParams): Promise<SynthesizedSpeech>;
+}

@@ -1,10 +1,12 @@
 import { config } from "../config";
 import { OllamaTextProvider } from "./ollama/textProvider";
 import { ComfyImageProvider } from "./image/comfyImageProvider";
-import type { TextGenProvider, ImageGenProvider } from "./types";
+import { PiperSpeechProvider } from "./speech/piperSpeechProvider";
+import type { TextGenProvider, ImageGenProvider, SpeechProvider } from "./types";
 
 let textProvider: TextGenProvider | null = null;
 let imageProvider: ImageGenProvider | null = null;
+let speechProvider: SpeechProvider | null = null;
 
 export function getTextProvider(): TextGenProvider {
   if (!textProvider) {
@@ -33,4 +35,11 @@ export function getImageProvider(): ImageGenProvider {
     );
   }
   return imageProvider;
+}
+
+export function getSpeechProvider(): SpeechProvider {
+  if (!speechProvider) {
+    speechProvider = new PiperSpeechProvider(config.tts.host, config.tts.requestTimeoutMs);
+  }
+  return speechProvider;
 }
