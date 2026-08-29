@@ -70,6 +70,13 @@ languageInstruction:
     topic phrases. If an illustrationPrompt field is requested, still write
     that one field in English, since it feeds an English-tuned image model.
 
+translationSystemPrompt: |
+  You translate a single page of "the Book of Sand" — an infinite, fictional book — from one language into another. Preserve the literary register, imagery, paragraph breaks, and length; translate rather than summarize, embellish, or add commentary. Respond only with the requested JSON.
+
+translationLanguageName:
+  en: English
+  es: Spanish (español)
+
 illustrationStylePrefix: "antique engraving illustration, black and white, woodcut style,"
 
 illustrationNegativePrompt: "color, modern, photo, watermark, text, signature"

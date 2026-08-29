@@ -4,7 +4,14 @@ import { loadPrompts } from "../../prompt/loadPrompts";
 import { isValidPageNumber, randomPageNumber } from "../../prompt/pageNumber";
 import { hopsForJumpSize, normalizeChainLength, resetSkeleton, walkSkeleton } from "../../skeleton";
 import { TextGenUnavailableError } from "../errors";
-import type { GeneratePageParams, GeneratedPage, Language, SkeletonState, TextGenProvider } from "../types";
+import type {
+  GeneratePageParams,
+  GeneratedPage,
+  Language,
+  SkeletonState,
+  TextGenProvider,
+  TranslatePageParams,
+} from "../types";
 
 const PAGE_RESPONSE_SCHEMA = {
   type: "object",
@@ -14,6 +21,14 @@ const PAGE_RESPONSE_SCHEMA = {
     illustrationPrompt: { type: "string" },
   },
   required: ["pageText", "pageNumber"],
+};
+
+const TRANSLATION_RESPONSE_SCHEMA = {
+  type: "object",
+  properties: {
+    pageText: { type: "string" },
+  },
+  required: ["pageText"],
 };
 
 const TOPIC_RESPONSE_SCHEMA = {
@@ -74,6 +89,30 @@ export class OllamaTextProvider implements TextGenProvider {
     const page = await this.callProseModel(userPrompt, params.wantIllustration, params.language);
 
     return { ...page, skeleton: newSkeleton };
+  }
+
+  async translatePage({ text, language }: TranslatePageParams): Promise<string> {
+    const prompts = loadPrompts();
+    const userPrompt = [
+      `Translate the following page into ${prompts.translationLanguageName[language]}:`,
+      `"""\n${text}\n"""`,
+      'Respond with JSON only: { "pageText": string } — the translated page.',
+    ].join("\n\n");
+
+    const json = await this.chat(prompts.translationSystemPrompt, userPrompt, TRANSLATION_RESPONSE_SCHEMA);
+
+    let parsed: { pageText?: unknown };
+    try {
+      parsed = JSON.parse(json.message.content);
+    } catch {
+      throw new TextGenUnavailableError("Ollama returned unparseable translation output");
+    }
+
+    if (typeof parsed.pageText !== "string" || parsed.pageText.trim().length === 0) {
+      throw new TextGenUnavailableError("Ollama returned an empty translation");
+    }
+
+    return parsed.pageText.trim();
   }
 
   private async callProseModel(userPrompt: string, wantIllustration: boolean, language: Language): Promise<GeneratedPage> {

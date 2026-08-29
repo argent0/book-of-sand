@@ -36,6 +36,19 @@ async function fetchPage(body: {
   };
 }
 
+async function fetchTranslation(text: string, language: Language): Promise<string> {
+  const res = await fetch("/api/translate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text, language }),
+  });
+  if (!res.ok) {
+    throw new Error("translation-unavailable");
+  }
+  const json = await res.json();
+  return json.text;
+}
+
 export function Book() {
   const [page, setPage] = useState<PageState | null>(null);
   const [mode, setMode] = useState<Mode>("direct");
@@ -74,9 +87,21 @@ export function Book() {
     setSkeleton(null);
   }
 
-  function changeLanguage(newLanguage: Language) {
+  async function changeLanguage(newLanguage: Language) {
+    if (newLanguage === language || loading) return;
     setLanguage(newLanguage);
-    setSkeleton(null);
+
+    if (!page) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const translatedText = await fetchTranslation(page.text, newLanguage);
+      setPage((prev) => (prev ? { ...prev, text: translatedText } : prev));
+    } catch {
+      setError("The page resists translation — the model isn't reachable.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function turnPage(direction: Direction, jumpSize: JumpSize) {

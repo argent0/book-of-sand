@@ -16,6 +16,8 @@ export interface PromptText {
   illustrationStylePrefix: string;
   illustrationNegativePrompt: string;
   languageInstruction: Record<Language, string>;
+  translationSystemPrompt: string;
+  translationLanguageName: Record<Language, string>;
 }
 
 const PROMPTS_PATH = path.join(process.cwd(), "config", "prompts.yaml");
@@ -33,9 +35,12 @@ const REQUIRED_KEYS: (keyof PromptText)[] = [
   "illustrationStylePrefix",
   "illustrationNegativePrompt",
   "languageInstruction",
+  "translationSystemPrompt",
+  "translationLanguageName",
 ];
 const JUMP_SIZES: JumpSize[] = ["small", "medium", "large"];
 const LANGUAGES: Language[] = ["en", "es"];
+const LANGUAGE_KEYED_KEYS = ["languageInstruction", "translationLanguageName"] as const;
 
 /**
  * Reads and parses config/prompts.yaml fresh on every call — no module-level
@@ -84,18 +89,21 @@ function validate(parsed: unknown): PromptText {
     }
   }
 
-  const languageTable = obj.languageInstruction;
-  if (typeof languageTable !== "object" || languageTable === null) {
-    throw new Error(`${PROMPTS_PATH}: "languageInstruction" must be a mapping of en/es.`);
-  }
-  for (const lang of LANGUAGES) {
-    if (typeof (languageTable as Record<string, unknown>)[lang] !== "string") {
-      throw new Error(`${PROMPTS_PATH}: "languageInstruction.${lang}" must be a string.`);
+  for (const key of LANGUAGE_KEYED_KEYS) {
+    const table = obj[key];
+    if (typeof table !== "object" || table === null) {
+      throw new Error(`${PROMPTS_PATH}: "${key}" must be a mapping of en/es.`);
+    }
+    for (const lang of LANGUAGES) {
+      if (typeof (table as Record<string, unknown>)[lang] !== "string") {
+        throw new Error(`${PROMPTS_PATH}: "${key}.${lang}" must be a string.`);
+      }
     }
   }
 
+  const tableKeys: (keyof PromptText)[] = ["proseDriftInstruction", "topicDriftInstruction", ...LANGUAGE_KEYED_KEYS];
   for (const key of REQUIRED_KEYS) {
-    if (key === "proseDriftInstruction" || key === "topicDriftInstruction" || key === "languageInstruction") continue;
+    if (tableKeys.includes(key)) continue;
     if (typeof obj[key] !== "string") {
       throw new Error(`${PROMPTS_PATH}: "${key}" must be a string.`);
     }

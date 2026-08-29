@@ -25,8 +25,14 @@ export interface GeneratedPage {
   skeleton?: SkeletonState;
 }
 
+export interface TranslatePageParams {
+  text: string;
+  language: Language;
+}
+
 export interface TextGenProvider {
   generatePage(params: GeneratePageParams): Promise<GeneratedPage>;
+  translatePage(params: TranslatePageParams): Promise<string>;
 }
 
 export interface GenerateImageParams {
