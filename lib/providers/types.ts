@@ -50,6 +50,7 @@ export interface ImageGenProvider {
 
 export interface SynthesizeSpeechParams {
   text: string;
+  language: Language;
 }
 
 export interface SynthesizedSpeech {

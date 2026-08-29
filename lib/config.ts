@@ -49,7 +49,7 @@ export const config = {
     mediumHops: num("STRUCTURED_MEDIUM_HOPS", 3),
   },
   tts: {
-    // English only — the ai-piper voice model is en_US-lessac-high.
+    // ai-piper: English (en_US-lessac) and Spanish (es_AR/es_MX) voices.
     enabled: bool("TTS_ENABLED", true),
     host: str("TTS_HOST", "http://constantinople:5002"),
     requestTimeoutMs: num("TTS_REQUEST_TIMEOUT_MS", 60000),

@@ -50,11 +50,11 @@ async function fetchTranslation(text: string, language: Language): Promise<strin
   return json.text;
 }
 
-async function fetchSpeech(text: string): Promise<Blob> {
+async function fetchSpeech(text: string, language: Language): Promise<Blob> {
   const res = await fetch("/api/speech", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text }),
+    body: JSON.stringify({ text, language }),
   });
   if (!res.ok) {
     throw new Error("speech-unavailable");
@@ -68,10 +68,10 @@ interface PrefetchResult {
   audioUrl: string | null;
 }
 
-// Fetches the next page and, for English, its narration audio ahead of time
-// so an auto-advance transition can swap them in with no generation delay.
-// A speech failure degrades gracefully (audioUrl: null, page still usable);
-// a page-fetch failure is the only case that fails the whole prefetch.
+// Fetches the next page and its narration audio ahead of time so an
+// auto-advance transition can swap them in with no generation delay. A
+// speech failure degrades gracefully (audioUrl: null, page still usable); a
+// page-fetch failure is the only case that fails the whole prefetch.
 async function prefetchNext(
   fromPage: PageState,
   mode: Mode,
@@ -94,12 +94,10 @@ async function prefetchNext(
   }
 
   let audioUrl: string | null = null;
-  if (language === "en") {
-    try {
-      audioUrl = URL.createObjectURL(await fetchSpeech(next.text));
-    } catch {
-      audioUrl = null;
-    }
+  try {
+    audioUrl = URL.createObjectURL(await fetchSpeech(next.text, language));
+  } catch {
+    audioUrl = null;
   }
 
   return { page: next, skeleton: nextSkeleton, audioUrl };
@@ -140,13 +138,13 @@ export function Book() {
   });
 
   // While auto-advance is on and a page is actively playing, keep one page
-  // (text + English audio) prefetched ahead so the next transition is
-  // instant instead of waiting on generation.
+  // (text + audio) prefetched ahead so the next transition is instant
+  // instead of waiting on generation.
   useEffect(() => {
-    if (!page || !autoAdvance || language !== "en" || speechState !== "playing") return;
+    if (!page || !autoAdvance || speechState !== "playing") return;
     ensurePrefetchFor(page);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, autoAdvance, language, speechState]);
+  }, [page, autoAdvance, speechState]);
 
   useEffect(() => {
     const audio = new Audio();
@@ -258,7 +256,7 @@ export function Book() {
   // Reads `text` aloud on the persistent audio element. Only reads state via
   // refs, never closed-over component state, so it stays correct whether
   // called from a fresh click handler or from the mount-time 'ended' listener.
-  async function speak(text: string) {
+  async function speak(text: string, language: Language) {
     const mySessionId = sessionIdRef.current;
     const audio = audioRef.current;
     if (!audio) return;
@@ -267,7 +265,7 @@ export function Book() {
     setError(null);
     spokenTextRef.current = text;
     try {
-      const blob = await fetchSpeech(text);
+      const blob = await fetchSpeech(text, language);
       if (sessionIdRef.current !== mySessionId) return;
 
       const url = URL.createObjectURL(blob);
@@ -319,8 +317,8 @@ export function Book() {
   }
 
   // Fires when a read-aloud finishes and auto-advance is on: turns the page
-  // forward and, if the new page is in English, keeps reading — chaining
-  // hands-free through the book. Uses the prefetched next page/audio when
+  // forward and keeps reading — chaining hands-free through the book. Uses
+  // the prefetched next page/audio when
   // one is ready (the common case, since ensurePrefetchFor starts it as soon
   // as the current page begins playing), falling back to fetching on the
   // spot otherwise. Reads/writes only via refs and setState, so it's safe to
@@ -354,8 +352,8 @@ export function Book() {
     setSkeleton(result.skeleton);
     if (result.audioUrl) {
       playPrefetchedAudio(result.audioUrl, result.page.text);
-    } else if (currentLanguage === "en") {
-      void speak(result.page.text);
+    } else {
+      void speak(result.page.text, currentLanguage);
     }
   }
 
@@ -373,9 +371,7 @@ export function Book() {
       void audio.play();
       return;
     }
-    if (language === "en") {
-      void speak(page.text);
-    }
+    void speak(page.text, language);
   }
 
   return (
@@ -385,7 +381,7 @@ export function Book() {
         <LanguageToggle language={language} disabled={loading} onChange={changeLanguage} />
         <SpeechControls
           state={speechState}
-          canStart={!!page && language === "en"}
+          canStart={!!page}
           autoAdvance={autoAdvance}
           onTogglePlay={toggleSpeech}
           onToggleAutoAdvance={setAutoAdvance}

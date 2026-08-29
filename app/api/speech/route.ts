@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { config } from "../../../lib/config";
 import { getSpeechProvider } from "../../../lib/providers/factory";
+import type { Language } from "../../../lib/providers/types";
+
+function parseLanguage(value: unknown): Language {
+  return value === "es" ? "es" : "en";
+}
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
   const text = typeof body.text === "string" ? body.text : "";
+  const language = parseLanguage(body.language);
 
   if (!config.tts.enabled) {
     return NextResponse.json({ error: "tts-disabled" }, { status: 503 });
@@ -14,7 +20,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { audio, contentType } = await getSpeechProvider().synthesizeSpeech({ text });
+    const { audio, contentType } = await getSpeechProvider().synthesizeSpeech({ text, language });
     return new NextResponse(audio, {
       status: 200,
       headers: { "Content-Type": contentType },

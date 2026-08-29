@@ -7,14 +7,14 @@ export class PiperSpeechProvider implements SpeechProvider {
     private readonly timeoutMs: number
   ) {}
 
-  async synthesizeSpeech({ text }: SynthesizeSpeechParams): Promise<SynthesizedSpeech> {
+  async synthesizeSpeech({ text, language }: SynthesizeSpeechParams): Promise<SynthesizedSpeech> {
     let res: Response;
     try {
       res = await fetch(`${this.host}/synthesize`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         signal: AbortSignal.timeout(this.timeoutMs),
-        body: JSON.stringify({ text }),
+        body: JSON.stringify({ text, language }),
       });
     } catch {
       throw new SpeechGenUnavailableError();
