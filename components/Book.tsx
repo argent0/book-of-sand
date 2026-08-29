@@ -62,6 +62,49 @@ async function fetchSpeech(text: string): Promise<Blob> {
   return res.blob();
 }
 
+interface PrefetchResult {
+  page: PageState;
+  skeleton: SkeletonState | null;
+  audioUrl: string | null;
+}
+
+// Fetches the next page and, for English, its narration audio ahead of time
+// so an auto-advance transition can swap them in with no generation delay.
+// A speech failure degrades gracefully (audioUrl: null, page still usable);
+// a page-fetch failure is the only case that fails the whole prefetch.
+async function prefetchNext(
+  fromPage: PageState,
+  mode: Mode,
+  language: Language,
+  skeleton: SkeletonState | null
+): Promise<PrefetchResult | null> {
+  let next: PageState;
+  let nextSkeleton: SkeletonState | null;
+  try {
+    ({ page: next, skeleton: nextSkeleton } = await fetchPage({
+      currentPageText: fromPage.text,
+      direction: "forward",
+      jumpSize: "small",
+      mode,
+      language,
+      skeleton,
+    }));
+  } catch {
+    return null;
+  }
+
+  let audioUrl: string | null = null;
+  if (language === "en") {
+    try {
+      audioUrl = URL.createObjectURL(await fetchSpeech(next.text));
+    } catch {
+      audioUrl = null;
+    }
+  }
+
+  return { page: next, skeleton: nextSkeleton, audioUrl };
+}
+
 export function Book() {
   const [page, setPage] = useState<PageState | null>(null);
   const [mode, setMode] = useState<Mode>("direct");
@@ -81,6 +124,13 @@ export function Book() {
   const sessionIdRef = useRef(0);
   const latestRef = useRef({ page, mode, language, skeleton });
 
+  // One-page-ahead prefetch pipeline for auto-advance: keyed by the page it
+  // was computed for, plus a generation counter so a prefetch superseded
+  // before anyone consumes it still gets its audio URL revoked instead of
+  // leaking.
+  const prefetchRef = useRef<{ forPageText: string; resultPromise: Promise<PrefetchResult | null> } | null>(null);
+  const prefetchGenRef = useRef(0);
+
   useEffect(() => {
     autoAdvanceRef.current = autoAdvance;
   }, [autoAdvance]);
@@ -88,6 +138,15 @@ export function Book() {
   useEffect(() => {
     latestRef.current = { page, mode, language, skeleton };
   });
+
+  // While auto-advance is on and a page is actively playing, keep one page
+  // (text + English audio) prefetched ahead so the next transition is
+  // instant instead of waiting on generation.
+  useEffect(() => {
+    if (!page || !autoAdvance || language !== "en" || speechState !== "playing") return;
+    ensurePrefetchFor(page);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, autoAdvance, language, speechState]);
 
   useEffect(() => {
     const audio = new Audio();
@@ -116,6 +175,14 @@ export function Book() {
       if (audioObjectUrlRef.current) URL.revokeObjectURL(audioObjectUrlRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      prefetchRef.current?.resultPromise.then((result) => {
+        if (result?.audioUrl) URL.revokeObjectURL(result.audioUrl);
+      });
+    };
   }, []);
 
   useEffect(() => {
@@ -217,41 +284,78 @@ export function Book() {
     }
   }
 
+  // Kicks off the one-page-ahead prefetch for `forPage`, unless one is
+  // already in flight/done for that exact page. Superseded results (the
+  // generation counter no longer matches once they resolve) get their audio
+  // URL revoked instead of leaking, since no one will consume them.
+  function ensurePrefetchFor(forPage: PageState) {
+    if (prefetchRef.current?.forPageText === forPage.text) return;
+    const myGen = ++prefetchGenRef.current;
+    const { mode: currentMode, language: currentLanguage, skeleton: currentSkeleton } = latestRef.current;
+    const resultPromise = prefetchNext(forPage, currentMode, currentLanguage, currentSkeleton).then((result) => {
+      if (prefetchGenRef.current !== myGen && result?.audioUrl) {
+        URL.revokeObjectURL(result.audioUrl);
+      }
+      return result;
+    });
+    prefetchRef.current = { forPageText: forPage.text, resultPromise };
+  }
+
+  // Plays audio that was already fetched (by prefetchNext), so there's no
+  // network round trip between one page ending and the next starting.
+  function playPrefetchedAudio(url: string, text: string) {
+    const audio = audioRef.current;
+    if (!audio) return;
+    spokenTextRef.current = text;
+    if (audioObjectUrlRef.current && audioObjectUrlRef.current !== url) {
+      URL.revokeObjectURL(audioObjectUrlRef.current);
+    }
+    audioObjectUrlRef.current = url;
+    audio.src = url;
+    void audio.play().catch(() => {
+      setSpeechState("idle");
+      setError("The page resists being read aloud — the speech backend isn't reachable.");
+    });
+  }
+
   // Fires when a read-aloud finishes and auto-advance is on: turns the page
   // forward and, if the new page is in English, keeps reading — chaining
-  // hands-free through the book. Reads/writes only via refs and setState, so
-  // it's safe to be called from a listener registered once at mount.
+  // hands-free through the book. Uses the prefetched next page/audio when
+  // one is ready (the common case, since ensurePrefetchFor starts it as soon
+  // as the current page begins playing), falling back to fetching on the
+  // spot otherwise. Reads/writes only via refs and setState, so it's safe to
+  // be called from a listener registered once at mount.
   async function autoAdvanceTurn() {
     const mySessionId = sessionIdRef.current;
     const { page: currentPage, mode: currentMode, language: currentLanguage, skeleton: currentSkeleton } = latestRef.current;
     if (!currentPage) return;
 
+    const pending = prefetchRef.current;
+    const usingPending = pending?.forPageText === currentPage.text;
+    if (usingPending) prefetchRef.current = null;
+
     setLoading(true);
     setError(null);
-    let next: PageState | null = null;
-    let nextSkeleton: SkeletonState | null = null;
-    try {
-      ({ page: next, skeleton: nextSkeleton } = await fetchPage({
-        currentPageText: currentPage.text,
-        direction: "forward",
-        jumpSize: "small",
-        mode: currentMode,
-        language: currentLanguage,
-        skeleton: currentSkeleton,
-      }));
-    } catch {
-      if (sessionIdRef.current === mySessionId) {
-        setError("The book resists turning — the model isn't reachable.");
-      }
-    } finally {
-      if (sessionIdRef.current === mySessionId) setLoading(false);
+    const result = usingPending
+      ? await pending!.resultPromise
+      : await prefetchNext(currentPage, currentMode, currentLanguage, currentSkeleton);
+    if (sessionIdRef.current === mySessionId) setLoading(false);
+
+    if (sessionIdRef.current !== mySessionId) {
+      if (result?.audioUrl) URL.revokeObjectURL(result.audioUrl);
+      return;
+    }
+    if (!result) {
+      setError("The book resists turning — the model isn't reachable.");
+      return;
     }
 
-    if (!next || sessionIdRef.current !== mySessionId) return;
-    setPage(next);
-    setSkeleton(nextSkeleton);
-    if (currentLanguage === "en") {
-      void speak(next.text);
+    setPage(result.page);
+    setSkeleton(result.skeleton);
+    if (result.audioUrl) {
+      playPrefetchedAudio(result.audioUrl, result.page.text);
+    } else if (currentLanguage === "en") {
+      void speak(result.page.text);
     }
   }
 
