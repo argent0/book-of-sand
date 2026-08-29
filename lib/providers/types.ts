@@ -1,6 +1,7 @@
 export type Direction = "forward" | "backward";
 export type JumpSize = "small" | "medium" | "large";
 export type Mode = "direct" | "structured";
+export type Language = "en" | "es";
 
 export interface SkeletonState {
   topics: string[];
@@ -13,6 +14,7 @@ export interface GeneratePageParams {
   jumpSize: JumpSize;
   wantIllustration: boolean;
   mode: Mode;
+  language: Language;
   skeleton: SkeletonState | null;
 }
 

@@ -7,7 +7,7 @@ import {
   recordGenerationSuccess,
   recordGenerationTimeout,
 } from "../../../lib/providers/image/illustrationRate";
-import type { Direction, JumpSize, Mode, SkeletonState } from "../../../lib/providers/types";
+import type { Direction, JumpSize, Language, Mode, SkeletonState } from "../../../lib/providers/types";
 
 function parseDirection(value: unknown): Direction {
   return value === "backward" ? "backward" : "forward";
@@ -19,6 +19,10 @@ function parseJumpSize(value: unknown): JumpSize {
 
 function parseMode(value: unknown): Mode {
   return value === "structured" ? "structured" : "direct";
+}
+
+function parseLanguage(value: unknown): Language {
+  return value === "es" ? "es" : "en";
 }
 
 function parseSkeleton(value: unknown): SkeletonState | null {
@@ -41,6 +45,7 @@ export async function POST(req: NextRequest) {
   const direction = parseDirection(body.direction);
   const jumpSize = parseJumpSize(body.jumpSize);
   const mode = parseMode(body.mode);
+  const language = parseLanguage(body.language);
   const skeleton = parseSkeleton(body.skeleton);
   const isFirstPage = currentPageText === null;
   const wantIllustration =
@@ -55,6 +60,7 @@ export async function POST(req: NextRequest) {
       jumpSize,
       wantIllustration,
       mode,
+      language,
       skeleton,
     });
   } catch {

@@ -25,6 +25,13 @@ body {
   padding: 2rem 1rem;
 }
 
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+}
+
 .book {
   position: relative;
   width: min(760px, 100%);
@@ -148,12 +155,14 @@ body {
   font-weight: bold;
 }
 
-.mode-toggle {
+.mode-toggle,
+.language-toggle {
   display: flex;
   gap: 0.5rem;
 }
 
-.mode-toggle button {
+.mode-toggle button,
+.language-toggle button {
   font-family: inherit;
   background: transparent;
   color: #e6d8bd;
@@ -165,17 +174,20 @@ body {
   letter-spacing: 0.05em;
 }
 
-.mode-toggle button:hover:not(:disabled) {
+.mode-toggle button:hover:not(:disabled),
+.language-toggle button:hover:not(:disabled) {
   background: rgba(230, 216, 189, 0.1);
 }
 
-.mode-toggle button.active {
+.mode-toggle button.active,
+.language-toggle button.active {
   background: #f2e6cc;
   color: #2b1d14;
   font-weight: bold;
 }
 
-.mode-toggle button:disabled {
+.mode-toggle button:disabled,
+.language-toggle button:disabled {
   opacity: 0.6;
   cursor: default;
 }

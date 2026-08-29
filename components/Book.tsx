@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { Page } from "./Page";
 import { PageControls } from "./PageControls";
 import { ModeToggle } from "./ModeToggle";
-import type { Direction, JumpSize, Mode, SkeletonState } from "../lib/providers/types";
+import { LanguageToggle } from "./LanguageToggle";
+import type { Direction, JumpSize, Language, Mode, SkeletonState } from "../lib/providers/types";
 
 export interface PageState {
   text: string;
@@ -17,6 +18,7 @@ async function fetchPage(body: {
   direction?: Direction;
   jumpSize?: JumpSize;
   mode: Mode;
+  language: Language;
   skeleton: SkeletonState | null;
 }): Promise<{ page: PageState; skeleton: SkeletonState | null }> {
   const res = await fetch("/api/page", {
@@ -37,6 +39,7 @@ async function fetchPage(body: {
 export function Book() {
   const [page, setPage] = useState<PageState | null>(null);
   const [mode, setMode] = useState<Mode>("direct");
+  const [language, setLanguage] = useState<Language>("en");
   const [skeleton, setSkeleton] = useState<SkeletonState | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -54,6 +57,7 @@ export function Book() {
       const { page: next, skeleton: nextSkeleton } = await fetchPage({
         currentPageText: null,
         mode,
+        language,
         skeleton: null,
       });
       setPage(next);
@@ -70,6 +74,11 @@ export function Book() {
     setSkeleton(null);
   }
 
+  function changeLanguage(newLanguage: Language) {
+    setLanguage(newLanguage);
+    setSkeleton(null);
+  }
+
   async function turnPage(direction: Direction, jumpSize: JumpSize) {
     if (!page || loading) return;
     setLoading(true);
@@ -80,6 +89,7 @@ export function Book() {
         direction,
         jumpSize,
         mode,
+        language,
         skeleton,
       });
       setPage(next);
@@ -93,7 +103,10 @@ export function Book() {
 
   return (
     <main className="scene">
-      <ModeToggle mode={mode} disabled={loading} onChange={changeMode} />
+      <div className="toolbar">
+        <ModeToggle mode={mode} disabled={loading} onChange={changeMode} />
+        <LanguageToggle language={language} disabled={loading} onChange={changeLanguage} />
+      </div>
       <div className="book">
         {page && <Page key={page.text} pageNumber={page.pageNumber} text={page.text} illustration={page.illustration} />}
         {loading && <div className="loading">turning the page…</div>}

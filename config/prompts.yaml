@@ -62,6 +62,14 @@ inventStartTopicInstruction: >-
 
 pageQuoteIntro: 'Here is a page of "the Book of Sand":'
 
+languageInstruction:
+  en: ""
+  es: >-
+    Override the language above: write entirely in Spanish (español), not
+    English — this applies to the page text, and, in structured mode, the
+    topic phrases. If an illustrationPrompt field is requested, still write
+    that one field in English, since it feeds an English-tuned image model.
+
 illustrationStylePrefix: "antique engraving illustration, black and white, woodcut style,"
 
 illustrationNegativePrompt: "color, modern, photo, watermark, text, signature"

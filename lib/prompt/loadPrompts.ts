@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { load as parseYaml } from "js-yaml";
-import type { JumpSize } from "../providers/types";
+import type { JumpSize, Language } from "../providers/types";
 
 export interface PromptText {
   proseSystemPrompt: string;
@@ -15,6 +15,7 @@ export interface PromptText {
   pageQuoteIntro: string;
   illustrationStylePrefix: string;
   illustrationNegativePrompt: string;
+  languageInstruction: Record<Language, string>;
 }
 
 const PROMPTS_PATH = path.join(process.cwd(), "config", "prompts.yaml");
@@ -31,8 +32,10 @@ const REQUIRED_KEYS: (keyof PromptText)[] = [
   "pageQuoteIntro",
   "illustrationStylePrefix",
   "illustrationNegativePrompt",
+  "languageInstruction",
 ];
 const JUMP_SIZES: JumpSize[] = ["small", "medium", "large"];
+const LANGUAGES: Language[] = ["en", "es"];
 
 /**
  * Reads and parses config/prompts.yaml fresh on every call — no module-level
@@ -81,8 +84,18 @@ function validate(parsed: unknown): PromptText {
     }
   }
 
+  const languageTable = obj.languageInstruction;
+  if (typeof languageTable !== "object" || languageTable === null) {
+    throw new Error(`${PROMPTS_PATH}: "languageInstruction" must be a mapping of en/es.`);
+  }
+  for (const lang of LANGUAGES) {
+    if (typeof (languageTable as Record<string, unknown>)[lang] !== "string") {
+      throw new Error(`${PROMPTS_PATH}: "languageInstruction.${lang}" must be a string.`);
+    }
+  }
+
   for (const key of REQUIRED_KEYS) {
-    if (key === "proseDriftInstruction" || key === "topicDriftInstruction") continue;
+    if (key === "proseDriftInstruction" || key === "topicDriftInstruction" || key === "languageInstruction") continue;
     if (typeof obj[key] !== "string") {
       throw new Error(`${PROMPTS_PATH}: "${key}" must be a string.`);
     }

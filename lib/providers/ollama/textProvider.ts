@@ -4,7 +4,7 @@ import { loadPrompts } from "../../prompt/loadPrompts";
 import { isValidPageNumber, randomPageNumber } from "../../prompt/pageNumber";
 import { hopsForJumpSize, normalizeChainLength, resetSkeleton, walkSkeleton } from "../../skeleton";
 import { TextGenUnavailableError } from "../errors";
-import type { GeneratePageParams, GeneratedPage, SkeletonState, TextGenProvider } from "../types";
+import type { GeneratePageParams, GeneratedPage, Language, SkeletonState, TextGenProvider } from "../types";
 
 const PAGE_RESPONSE_SCHEMA = {
   type: "object",
@@ -43,7 +43,7 @@ export class OllamaTextProvider implements TextGenProvider {
 
   private async generateDirectPage(params: GeneratePageParams): Promise<GeneratedPage> {
     const userPrompt = buildUserPrompt(params);
-    return this.callProseModel(userPrompt, params.wantIllustration);
+    return this.callProseModel(userPrompt, params.wantIllustration, params.language);
   }
 
   private async generateStructuredPage(params: GeneratePageParams): Promise<GeneratedPage> {
@@ -51,15 +51,16 @@ export class OllamaTextProvider implements TextGenProvider {
 
     if (!skeleton) {
       const seedTopic = params.currentPageText
-        ? await this.callTopicModel(buildSeedFromPagePrompt(params.currentPageText))
-        : await this.callTopicModel(buildInventStartTopicPrompt());
+        ? await this.callTopicModel(buildSeedFromPagePrompt(params.currentPageText), params.language)
+        : await this.callTopicModel(buildInventStartTopicPrompt(), params.language);
       skeleton = resetSkeleton(seedTopic[0]);
     }
 
     const hops = hopsForJumpSize(params.jumpSize, this.mediumHops);
     const seedTopic = skeleton.topics[skeleton.currentIndex];
     const rawChain = await this.callTopicModel(
-      buildTopicChainPrompt({ seedTopic, direction: params.direction, jumpSize: params.jumpSize, hops })
+      buildTopicChainPrompt({ seedTopic, direction: params.direction, jumpSize: params.jumpSize, hops }),
+      params.language
     );
     const chain = normalizeChainLength(rawChain, hops);
 
@@ -70,13 +71,15 @@ export class OllamaTextProvider implements TextGenProvider {
 
     const topic = newSkeleton.topics[newSkeleton.currentIndex];
     const userPrompt = buildUserPrompt({ ...params, topic });
-    const page = await this.callProseModel(userPrompt, params.wantIllustration);
+    const page = await this.callProseModel(userPrompt, params.wantIllustration, params.language);
 
     return { ...page, skeleton: newSkeleton };
   }
 
-  private async callProseModel(userPrompt: string, wantIllustration: boolean): Promise<GeneratedPage> {
-    const json = await this.chat(loadPrompts().proseSystemPrompt, userPrompt, PAGE_RESPONSE_SCHEMA);
+  private async callProseModel(userPrompt: string, wantIllustration: boolean, language: Language): Promise<GeneratedPage> {
+    const prompts = loadPrompts();
+    const systemPrompt = withLanguage(prompts.proseSystemPrompt, prompts.languageInstruction[language]);
+    const json = await this.chat(systemPrompt, userPrompt, PAGE_RESPONSE_SCHEMA);
 
     let parsed: { pageText?: unknown; pageNumber?: unknown; illustrationPrompt?: unknown };
     try {
@@ -99,8 +102,10 @@ export class OllamaTextProvider implements TextGenProvider {
     };
   }
 
-  private async callTopicModel(userPrompt: string): Promise<string[]> {
-    const json = await this.chat(loadPrompts().topicSystemPrompt, userPrompt, TOPIC_RESPONSE_SCHEMA);
+  private async callTopicModel(userPrompt: string, language: Language): Promise<string[]> {
+    const prompts = loadPrompts();
+    const systemPrompt = withLanguage(prompts.topicSystemPrompt, prompts.languageInstruction[language]);
+    const json = await this.chat(systemPrompt, userPrompt, TOPIC_RESPONSE_SCHEMA);
 
     let parsed: { topics?: unknown };
     try {
@@ -152,4 +157,8 @@ export class OllamaTextProvider implements TextGenProvider {
 
     return res.json();
   }
+}
+
+function withLanguage(systemPrompt: string, languageInstruction: string): string {
+  return languageInstruction ? `${systemPrompt}\n\n${languageInstruction}` : systemPrompt;
 }
