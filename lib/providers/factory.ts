@@ -1,6 +1,6 @@
 import { config } from "../config";
 import { OllamaTextProvider } from "./ollama/textProvider";
-import { LocalSDImageProvider } from "./image/localImageProvider";
+import { ComfyImageProvider } from "./image/comfyImageProvider";
 import type { TextGenProvider, ImageGenProvider } from "./types";
 
 let textProvider: TextGenProvider | null = null;
@@ -22,13 +22,14 @@ export function getTextProvider(): TextGenProvider {
 
 export function getImageProvider(): ImageGenProvider {
   if (!imageProvider) {
-    imageProvider = new LocalSDImageProvider(
+    imageProvider = new ComfyImageProvider(
       config.imageGen.host,
       config.imageGen.requestTimeoutMs,
+      config.imageGen.model,
       config.imageGen.width,
       config.imageGen.height,
       config.imageGen.steps,
-      config.imageGen.sampler
+      config.imageGen.cfg
     );
   }
   return imageProvider;

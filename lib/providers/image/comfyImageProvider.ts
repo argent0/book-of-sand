@@ -2,31 +2,33 @@ import { loadPrompts } from "../../prompt/loadPrompts";
 import { ImageGenUnavailableError } from "../errors";
 import type { GenerateImageParams, GeneratedImage, ImageGenProvider } from "../types";
 
-export class LocalSDImageProvider implements ImageGenProvider {
+export class ComfyImageProvider implements ImageGenProvider {
   constructor(
     private readonly host: string,
     private readonly timeoutMs: number,
+    private readonly model: string,
     private readonly width: number,
     private readonly height: number,
     private readonly steps: number,
-    private readonly sampler: string
+    private readonly cfg: number
   ) {}
 
   async generateImage({ prompt }: GenerateImageParams): Promise<GeneratedImage> {
     const prompts = loadPrompts();
     let res: Response;
     try {
-      res = await fetch(`${this.host}/sdapi/v1/txt2img`, {
+      res = await fetch(`${this.host}/v1/images/generations`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         signal: AbortSignal.timeout(this.timeoutMs),
         body: JSON.stringify({
           prompt: `${prompts.illustrationStylePrefix} ${prompt}`,
           negative_prompt: prompts.illustrationNegativePrompt,
-          steps: this.steps,
+          model: this.model,
           width: this.width,
           height: this.height,
-          sampler_name: this.sampler,
+          steps: this.steps,
+          cfg: this.cfg,
         }),
       });
     } catch {
@@ -38,7 +40,7 @@ export class LocalSDImageProvider implements ImageGenProvider {
     }
 
     const json = await res.json();
-    const image = json?.images?.[0];
+    const image = json?.image_b64;
     if (typeof image !== "string" || image.length === 0) {
       throw new ImageGenUnavailableError();
     }
