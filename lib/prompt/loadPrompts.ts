@@ -18,6 +18,12 @@ export interface PromptText {
   languageInstruction: Record<Language, string>;
   translationSystemPrompt: string;
   translationLanguageName: Record<Language, string>;
+  seedFragmentPrefix: string;
+  seedFragments: {
+    settings: string[];
+    objects: string[];
+    moods: string[];
+  };
 }
 
 const PROMPTS_PATH = path.join(process.cwd(), "config", "prompts.yaml");
@@ -37,10 +43,13 @@ const REQUIRED_KEYS: (keyof PromptText)[] = [
   "languageInstruction",
   "translationSystemPrompt",
   "translationLanguageName",
+  "seedFragmentPrefix",
+  "seedFragments",
 ];
 const JUMP_SIZES: JumpSize[] = ["small", "medium", "large"];
 const LANGUAGES: Language[] = ["en", "es"];
 const LANGUAGE_KEYED_KEYS = ["languageInstruction", "translationLanguageName"] as const;
+const SEED_FRAGMENT_LISTS = ["settings", "objects", "moods"] as const;
 
 /**
  * Reads and parses config/prompts.yaml fresh on every call — no module-level
@@ -101,7 +110,23 @@ function validate(parsed: unknown): PromptText {
     }
   }
 
-  const tableKeys: (keyof PromptText)[] = ["proseDriftInstruction", "topicDriftInstruction", ...LANGUAGE_KEYED_KEYS];
+  const seedFragments = obj.seedFragments;
+  if (typeof seedFragments !== "object" || seedFragments === null) {
+    throw new Error(`${PROMPTS_PATH}: "seedFragments" must be a mapping of settings/objects/moods.`);
+  }
+  for (const list of SEED_FRAGMENT_LISTS) {
+    const items = (seedFragments as Record<string, unknown>)[list];
+    if (!Array.isArray(items) || items.length === 0 || !items.every((item) => typeof item === "string")) {
+      throw new Error(`${PROMPTS_PATH}: "seedFragments.${list}" must be a non-empty array of strings.`);
+    }
+  }
+
+  const tableKeys: (keyof PromptText)[] = [
+    "proseDriftInstruction",
+    "topicDriftInstruction",
+    ...LANGUAGE_KEYED_KEYS,
+    "seedFragments",
+  ];
   for (const key of REQUIRED_KEYS) {
     if (tableKeys.includes(key)) continue;
     if (typeof obj[key] !== "string") {

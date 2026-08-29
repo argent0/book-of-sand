@@ -1,10 +1,12 @@
 import type { Direction, JumpSize } from "../providers/types";
 import { loadPrompts } from "./loadPrompts";
+import { pickSeedFragment } from "./seedFragments";
 
 export function buildInventStartTopicPrompt(): string {
   const prompts = loadPrompts();
   return [
     prompts.inventStartTopicInstruction,
+    pickSeedFragment(prompts),
     'Respond with JSON only: { "topics": string[] } — an array containing exactly 1 short topic phrase (a few words).',
   ].join("\n\n");
 }

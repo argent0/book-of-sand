@@ -1,5 +1,6 @@
 import type { Direction, JumpSize } from "../providers/types";
 import { loadPrompts } from "./loadPrompts";
+import { pickSeedFragment } from "./seedFragments";
 
 export function buildUserPrompt(params: {
   currentPageText: string | null;
@@ -20,6 +21,7 @@ export function buildUserPrompt(params: {
     }
   } else if (currentPageText === null) {
     parts.push(prompts.openingPageInstruction);
+    parts.push(pickSeedFragment(prompts));
   } else {
     parts.push(`The current page reads:\n\n"""\n${currentPageText}\n"""\n`);
     parts.push(

@@ -60,6 +60,95 @@ inventStartTopicInstruction: >-
   Invent an arbitrary starting topic for a page of the book, as if it fell
   open at random.
 
+# Procedural variety for pages/topics invented from nothing (no prior page
+# or topic to drift from). A small local model asked to "invent something
+# arbitrary" tends to collapse onto the same handful of images every time —
+# see lib/prompt/seedFragments.ts: pickSeedFragment() randomly combines one
+# setting + one object (+ a coin-flip mood) from the lists below and hands
+# them to the model as loose, unnamed inspiration, so openings actually vary.
+seedFragmentPrefix: >-
+  Let these unrelated fragments spark unexpected inspiration for the page —
+  weave a mood or image drawn loosely from them into the text without
+  naming them outright, listing them, or treating them as instructions to
+  follow literally:
+
+seedFragments:
+  settings:
+    - a drowned cathedral
+    - a moth-eaten circus tent
+    - an abandoned observatory
+    - a flooded subway tunnel
+    - a taxidermist's parlor
+    - a frost-bound greenhouse
+    - a smugglers' sea cave
+    - a derelict lighthouse
+    - a paper mill at midnight
+    - a border checkpoint long since closed
+    - a mountain monastery
+    - a shipwreck's flooded hold
+    - a puppet theater after the audience has left
+    - a glassblower's furnace room
+    - an abandoned windmill
+    - a limestone quarry
+    - an opera house's upper balcony
+    - a botanical garden's collapsed hothouse
+    - a railway roundhouse
+    - a tannery by the river
+    - an asylum's sealed east wing
+    - a violin maker's atelier
+    - a cartographer's cluttered study
+    - a diving bell suspended mid-descent
+    - a printing press hall gone silent
+    - a wax museum after closing
+    - a village of clocks that no longer agree
+    - a market for things that were never made
+    - a customs house for cargo no one claims
+    - a library shelved by scent instead of title
+  objects:
+    - a compass that points to no true north
+    - a ledger of debts owed to the dead
+    - a locket with no photograph inside
+    - a key that fits no lock in the house
+    - a jar of pinned, still-living moths
+    - a chessboard missing its king
+    - a stack of letters addressed but never sent
+    - a music box that plays its tune backward
+    - a mirror clouded past recognition
+    - a case of surgical instruments, unused
+    - a birdcage with the door left open
+    - a deck of cards missing both aces
+    - a globe charting a country that never was
+    - a phonograph cylinder cracked clean through
+    - an hourglass whose sand runs upward
+    - a taxidermied owl with glass eyes
+    - a ledger written in a language no one reads
+    - a loom left half-finished
+    - a telescope aimed at an empty patch of sky
+    - a wedding dress yellowed at the seams
+    - a set of keys to doors that no longer exist
+    - a passport stamped for countries not on any map
+    - a violin with one string missing
+    - an unfinished portrait, the face left blank
+    - a clock with thirteen numbers
+    - a seed catalog for flowers that do not bloom
+  moods:
+    - an atmosphere of quiet dread
+    - a mood of wistful, aching nostalgia
+    - a sense of something about to be forgotten
+    - an air of ceremonial solemnity
+    - a feeling of claustrophobic intimacy
+    - a note of dark, dry comedy
+    - a hush of reverence
+    - an undertone of quiet menace
+    - a sense of vast, indifferent time
+    - a mood of feverish obsession
+    - a stillness like held breath
+    - a longing for a place that no longer exists
+    - an unease that has no clear cause
+    - a tenderness worn thin by time
+    - a solemn, funereal patience
+    - a restlessness with no destination
+
 pageQuoteIntro: 'Here is a page of "the Book of Sand":'
 
 languageInstruction:
