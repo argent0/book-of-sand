@@ -35,7 +35,15 @@ export const config = {
     steps: num("IMAGE_GEN_STEPS", 25),
     cfg: num("IMAGE_GEN_CFG", 7.0),
   },
-  illustrationProbability: num("ILLUSTRATION_PROBABILITY", 0.18),
+  illustration: {
+    // Illustration frequency (after the always-illustrated first page) adapts
+    // to how long generations actually take: at or under fastMs it runs at
+    // maxProbability, at or over slowMs (or on an outright timeout) it drops
+    // to 0, and it's interpolated in between.
+    maxProbability: num("ILLUSTRATION_MAX_PROBABILITY", 0.25),
+    fastMs: num("ILLUSTRATION_FAST_MS", 15000),
+    slowMs: num("ILLUSTRATION_SLOW_MS", 90000),
+  },
   structured: {
     windowSize: num("STRUCTURED_WINDOW_SIZE", 5),
     mediumHops: num("STRUCTURED_MEDIUM_HOPS", 3),

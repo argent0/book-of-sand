@@ -1,5 +1,5 @@
 import { loadPrompts } from "../../prompt/loadPrompts";
-import { ImageGenUnavailableError } from "../errors";
+import { ImageGenTimeoutError, ImageGenUnavailableError } from "../errors";
 import type { GenerateImageParams, GeneratedImage, ImageGenProvider } from "../types";
 
 export class ComfyImageProvider implements ImageGenProvider {
@@ -31,10 +31,16 @@ export class ComfyImageProvider implements ImageGenProvider {
           cfg: this.cfg,
         }),
       });
-    } catch {
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "TimeoutError") {
+        throw new ImageGenTimeoutError();
+      }
       throw new ImageGenUnavailableError();
     }
 
+    if (res.status === 504) {
+      throw new ImageGenTimeoutError();
+    }
     if (!res.ok) {
       throw new ImageGenUnavailableError();
     }
@@ -45,6 +51,7 @@ export class ComfyImageProvider implements ImageGenProvider {
       throw new ImageGenUnavailableError();
     }
 
-    return { dataUrl: `data:image/png;base64,${image}` };
+    const inferMs = typeof json?.infer_ms === "number" ? json.infer_ms : undefined;
+    return { dataUrl: `data:image/png;base64,${image}`, inferMs };
   }
 }

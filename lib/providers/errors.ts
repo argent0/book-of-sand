@@ -11,3 +11,10 @@ export class ImageGenUnavailableError extends Error {
     this.name = "ImageGenUnavailableError";
   }
 }
+
+export class ImageGenTimeoutError extends ImageGenUnavailableError {
+  constructor(message = "Image generation timed out") {
+    super(message);
+    this.name = "ImageGenTimeoutError";
+  }
+}

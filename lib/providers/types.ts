@@ -33,6 +33,7 @@ export interface GenerateImageParams {
 
 export interface GeneratedImage {
   dataUrl: string;
+  inferMs?: number;
 }
 
 export interface ImageGenProvider {

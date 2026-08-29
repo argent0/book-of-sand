@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { config } from "../../../lib/config";
 import { getImageProvider, getTextProvider } from "../../../lib/providers/factory";
+import { ImageGenTimeoutError } from "../../../lib/providers/errors";
+import {
+  getIllustrationProbability,
+  recordGenerationSuccess,
+  recordGenerationTimeout,
+} from "../../../lib/providers/image/illustrationRate";
 import type { Direction, JumpSize, Mode, SkeletonState } from "../../../lib/providers/types";
 
 function parseDirection(value: unknown): Direction {
@@ -36,10 +42,10 @@ export async function POST(req: NextRequest) {
   const jumpSize = parseJumpSize(body.jumpSize);
   const mode = parseMode(body.mode);
   const skeleton = parseSkeleton(body.skeleton);
+  const isFirstPage = currentPageText === null;
   const wantIllustration =
-    currentPageText !== null &&
     config.imageGen.enabled &&
-    Math.random() < config.illustrationProbability;
+    (isFirstPage || Math.random() < getIllustrationProbability(config.illustration.maxProbability));
 
   let page;
   try {
@@ -60,8 +66,19 @@ export async function POST(req: NextRequest) {
     try {
       const img = await getImageProvider().generateImage({ prompt: page.illustrationPrompt });
       illustration = { dataUrl: img.dataUrl, description: page.illustrationPrompt };
-    } catch {
+      if (typeof img.inferMs === "number") {
+        recordGenerationSuccess(
+          img.inferMs,
+          config.illustration.maxProbability,
+          config.illustration.fastMs,
+          config.illustration.slowMs
+        );
+      }
+    } catch (err) {
       // Graceful degradation: image backend unavailable, page still renders as text-only.
+      if (err instanceof ImageGenTimeoutError) {
+        recordGenerationTimeout();
+      }
     }
   }
 
